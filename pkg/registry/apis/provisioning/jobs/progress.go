@@ -90,8 +90,10 @@ func (r *jobProgressRecorder) Record(ctx context.Context, result JobResourceResu
 		shouldLogError = true
 		logErr = result.Error()
 
-		// Don't count ignored actions as errors in error count or error list
-		if result.Action() != repository.FileActionIgnored {
+		// Don't count ignored actions as errors unless strict mode is enabled.
+		// Migrate/move jobs set StrictMaxErrors so export write failures must abort
+		// before namespace cleanup can delete unmanaged resources.
+		if result.Action() != repository.FileActionIgnored || r.maxErrors > 0 {
 			if len(r.errors) < 20 {
 				r.errors = append(r.errors, result.Error().Error())
 			}

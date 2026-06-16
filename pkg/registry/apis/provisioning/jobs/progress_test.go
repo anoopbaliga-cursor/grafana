@@ -932,6 +932,29 @@ func TestJobProgressRecorderLogsSuccessAtInfoLevel(t *testing.T) {
 	assert.Equal(t, "job resource operation succeeded", infoLogs[0].msg)
 }
 
+func TestJobProgressRecorderIgnoredActionsCountAsErrorsInStrictMode(t *testing.T) {
+	ctx := context.Background()
+
+	mockProgressFn := func(ctx context.Context, status provisioning.JobStatus) error {
+		return nil
+	}
+	recorder := newJobProgressRecorder(mockProgressFn, nil, "").(*jobProgressRecorder)
+	recorder.StrictMaxErrors(1)
+
+	recorder.Record(ctx, NewPathOnlyResult("folder1/file1.json").
+		WithError(assert.AnError).
+		WithAction(repository.FileActionIgnored).
+		Build())
+
+	err := recorder.TooManyErrors()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "too many errors")
+
+	recorder.mu.RLock()
+	assert.Equal(t, 1, recorder.errorCount)
+	recorder.mu.RUnlock()
+}
+
 func TestJobProgressRecorderIgnoredActionsDontCountAsErrors(t *testing.T) {
 	ctx := context.Background()
 
