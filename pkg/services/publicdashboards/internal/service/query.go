@@ -444,11 +444,15 @@ func sanitizeMetadataFromQueryData(res *backend.QueryDataResponse) {
 
 // sanitizeData removes the query expressions from the dashboard data
 func sanitizeData(data *simplejson.Json) {
-	for _, panelObj := range data.Get("panels").MustArray() {
+	sanitizePanelTargets(data.Get("panels").MustArray())
+}
+
+func sanitizePanelTargets(panels []any) {
+	for _, panelObj := range panels {
 		panel := simplejson.NewFromAny(panelObj)
 
-		// rows are layout-only and don't carry query targets, so skip them
-		if panel.Get("type").MustString() == "row" {
+		if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
+			sanitizePanelTargets(panel.Get("panels").MustArray())
 			continue
 		}
 

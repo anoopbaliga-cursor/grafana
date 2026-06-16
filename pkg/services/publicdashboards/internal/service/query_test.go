@@ -1391,6 +1391,68 @@ func buildJsonDataWithTimeRange(from, to, timezone string) *simplejson.Json {
 	})
 }
 
+func TestSanitizeData(t *testing.T) {
+	t.Run("removes expr, query, rawSql from top-level and collapsed row panels", func(t *testing.T) {
+		data := simplejson.NewFromAny(map[string]interface{}{
+			"panels": []interface{}{
+				map[string]interface{}{
+					"id":   2,
+					"type": "timeseries",
+					"targets": []interface{}{
+						map[string]interface{}{
+							"refId":  "A",
+							"expr":   "up",
+							"query":  "SELECT 1",
+							"rawSql": "SELECT * FROM metrics",
+						},
+					},
+				},
+				map[string]interface{}{
+					"id":        3,
+					"type":      "row",
+					"collapsed": true,
+					"panels": []interface{}{
+						map[string]interface{}{
+							"id":   4,
+							"type": "timeseries",
+							"targets": []interface{}{
+								map[string]interface{}{
+									"refId": "A",
+									"expr":  "go_goroutines{job=\"grafana\"}",
+								},
+								map[string]interface{}{
+									"refId":  "B",
+									"rawSql": "SELECT * FROM logs",
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+
+		sanitizeData(data)
+
+		topLevelTarget := simplejson.NewFromAny(data.Get("panels").MustArray()[0]).
+			Get("targets").MustArray()[0]
+		topTarget := simplejson.NewFromAny(topLevelTarget)
+		assert.Empty(t, topTarget.Get("expr").MustString())
+		assert.Empty(t, topTarget.Get("query").MustString())
+		assert.Empty(t, topTarget.Get("rawSql").MustString())
+		assert.Equal(t, "A", topTarget.Get("refId").MustString())
+
+		rowPanel := simplejson.NewFromAny(data.Get("panels").MustArray()[1])
+		nestedTargets := rowPanel.Get("panels").MustArray()[0].(map[string]interface{})["targets"].([]interface{})
+		nestedTargetA := simplejson.NewFromAny(nestedTargets[0])
+		assert.Empty(t, nestedTargetA.Get("expr").MustString())
+		assert.Equal(t, "A", nestedTargetA.Get("refId").MustString())
+
+		nestedTargetB := simplejson.NewFromAny(nestedTargets[1])
+		assert.Empty(t, nestedTargetB.Get("rawSql").MustString())
+		assert.Equal(t, "B", nestedTargetB.Get("refId").MustString())
+	})
+}
+
 func TestSanitizeDataV2(t *testing.T) {
 	t.Run("removes expr, query, rawSql from query specs", func(t *testing.T) {
 		data := simplejson.NewFromAny(map[string]interface{}{
