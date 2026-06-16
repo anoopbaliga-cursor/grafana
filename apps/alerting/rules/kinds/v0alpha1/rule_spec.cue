@@ -31,14 +31,23 @@ TemplateString: string
 	to:   #PromDurationWMillis
 }
 
+// TODO: validate that only one can specify source=true
+// & struct.MinFields(1) This doesn't work in Cue <v0.12.0 as per
+
 #ExpressionMap: {
 	[string]: #Expression
 }
 
 #Expression: {
+	// The type of query if this is a query expression
 	queryType?:         string
 	relativeTimeRange?: #RelativeTimeRange
-	datasourceUID?:     #DatasourceUID
-	model:              _
-	source?:            bool
+	// The UID of the datasource to run this expression against. If omitted, the expression will be run against the `__expr__` datasource
+	datasourceUID?: #DatasourceUID
+	model:          _
+	// Used to mark the expression to be used as the final source for the rule evaluation
+	// Only one expression in a rule can be marked as the source
+	// For AlertRules, this is the expression that will be evaluated against the alerting condition
+	// For RecordingRules, this is the expression that will be recorded
+	source?: bool
 }

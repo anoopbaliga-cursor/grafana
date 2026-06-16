@@ -46,14 +46,22 @@ spec:
           properties:
             datasourceUID:
               $ref: '#/components/schemas/DatasourceUID'
+              description: The UID of the datasource to run this expression against.
+                If omitted, the expression will be run against the `__expr__` datasource
             model:
               additionalProperties: {}
               type: object
             queryType:
+              description: The type of query if this is a query expression
               type: string
             relativeTimeRange:
               $ref: '#/components/schemas/RelativeTimeRange'
             source:
+              description: |-
+                Used to mark the expression to be used as the final source for the rule evaluation
+                Only one expression in a rule can be marked as the source
+                For AlertRules, this is the expression that will be evaluated against the alerting condition
+                For RecordingRules, this is the expression that will be recorded
               type: boolean
           required:
           - model
@@ -281,14 +289,22 @@ spec:
           properties:
             datasourceUID:
               $ref: '#/components/schemas/DatasourceUID'
+              description: The UID of the datasource to run this expression against.
+                If omitted, the expression will be run against the `__expr__` datasource
             model:
               additionalProperties: {}
               type: object
             queryType:
+              description: The type of query if this is a query expression
               type: string
             relativeTimeRange:
               $ref: '#/components/schemas/RelativeTimeRange'
             source:
+              description: |-
+                Used to mark the expression to be used as the final source for the rule evaluation
+                Only one expression in a rule can be marked as the source
+                For AlertRules, this is the expression that will be evaluated against the alerting condition
+                For RecordingRules, this is the expression that will be recorded
               type: boolean
           required:
           - model
@@ -470,6 +486,8 @@ spec:
           properties:
             name:
               $ref: '#/components/schemas/RuleUID'
+              description: name is the metadata.name of an AlertRule or RecordingRule
+                resource.
           required:
           - name
           type: object

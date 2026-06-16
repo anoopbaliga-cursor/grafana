@@ -22,6 +22,7 @@ type RuleSequencePromDuration string
 
 // +k8s:openapi-gen=true
 type RuleSequenceRuleRef struct {
+	// name is the metadata.name of an AlertRule or RecordingRule resource.
 	Name RuleSequenceRuleUID `json:"name"`
 }
 

@@ -133,11 +133,17 @@ func (AlertRuleExpressionMap) OpenAPIModelName() string {
 
 // +k8s:openapi-gen=true
 type AlertRuleExpression struct {
+	// The type of query if this is a query expression
 	QueryType         *string                     `json:"queryType,omitempty"`
 	RelativeTimeRange *AlertRuleRelativeTimeRange `json:"relativeTimeRange,omitempty"`
-	DatasourceUID     *AlertRuleDatasourceUID     `json:"datasourceUID,omitempty"`
-	Model             interface{}                 `json:"model"`
-	Source            *bool                       `json:"source,omitempty"`
+	// The UID of the datasource to run this expression against. If omitted, the expression will be run against the `__expr__` datasource
+	DatasourceUID *AlertRuleDatasourceUID `json:"datasourceUID,omitempty"`
+	Model         interface{}             `json:"model"`
+	// Used to mark the expression to be used as the final source for the rule evaluation
+	// Only one expression in a rule can be marked as the source
+	// For AlertRules, this is the expression that will be evaluated against the alerting condition
+	// For RecordingRules, this is the expression that will be recorded
+	Source *bool `json:"source,omitempty"`
 }
 
 // NewAlertRuleExpression creates a new AlertRuleExpression object.

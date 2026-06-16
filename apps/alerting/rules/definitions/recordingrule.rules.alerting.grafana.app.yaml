@@ -25,6 +25,7 @@ spec:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     queryType:
+                      description: The type of query if this is a query expression
                       type: string
                     relativeTimeRange:
                       properties:
@@ -39,6 +40,11 @@ spec:
                       - to
                       type: object
                     source:
+                      description: |-
+                        Used to mark the expression to be used as the final source for the rule evaluation
+                        Only one expression in a rule can be marked as the source
+                        For AlertRules, this is the expression that will be evaluated against the alerting condition
+                        For RecordingRules, this is the expression that will be recorded
                       type: boolean
                   required:
                   - model

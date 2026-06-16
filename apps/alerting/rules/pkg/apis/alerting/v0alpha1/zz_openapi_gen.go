@@ -105,8 +105,9 @@ func schema_pkg_apis_alerting_v0alpha1_AlertRuleExpression(ref common.ReferenceC
 				Properties: map[string]spec.Schema{
 					"queryType": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "The type of query if this is a query expression",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"relativeTimeRange": {
@@ -116,8 +117,9 @@ func schema_pkg_apis_alerting_v0alpha1_AlertRuleExpression(ref common.ReferenceC
 					},
 					"datasourceUID": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "The UID of the datasource to run this expression against. If omitted, the expression will be run against the `__expr__` datasource",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"model": {
@@ -128,8 +130,9 @@ func schema_pkg_apis_alerting_v0alpha1_AlertRuleExpression(ref common.ReferenceC
 					},
 					"source": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Used to mark the expression to be used as the final source for the rule evaluation Only one expression in a rule can be marked as the source For AlertRules, this is the expression that will be evaluated against the alerting condition For RecordingRules, this is the expression that will be recorded",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 				},
@@ -1412,8 +1415,9 @@ func schema_pkg_apis_alerting_v0alpha1_RecordingRuleExpression(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"queryType": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "The type of query if this is a query expression",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"relativeTimeRange": {
@@ -1423,8 +1427,9 @@ func schema_pkg_apis_alerting_v0alpha1_RecordingRuleExpression(ref common.Refere
 					},
 					"datasourceUID": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "The UID of the datasource to run this expression against. If omitted, the expression will be run against the `__expr__` datasource",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"model": {
@@ -1435,8 +1440,9 @@ func schema_pkg_apis_alerting_v0alpha1_RecordingRuleExpression(ref common.Refere
 					},
 					"source": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Used to mark the expression to be used as the final source for the rule evaluation Only one expression in a rule can be marked as the source For AlertRules, this is the expression that will be evaluated against the alerting condition For RecordingRules, this is the expression that will be recorded",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 				},
@@ -1839,9 +1845,10 @@ func schema_pkg_apis_alerting_v0alpha1_RuleSequenceRuleRef(ref common.ReferenceC
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "name is the metadata.name of an AlertRule or RecordingRule resource.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
