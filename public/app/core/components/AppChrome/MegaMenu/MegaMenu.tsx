@@ -12,6 +12,7 @@ import { ScrollContainer, useStyles2 } from '@grafana/ui';
 import { useGrafana } from 'app/core/context/GrafanaContext';
 import { setBookmark } from 'app/core/reducers/navBarTree';
 import { HOME_NAV_ID } from 'app/core/reducers/navModel';
+import { useSyncStarredItemsInNav } from 'app/features/stars/hooks';
 import { useDispatch, useSelector } from 'app/types/store';
 
 import { MegaMenuExtensionPoint } from './MegaMenuExtensionPoint';
@@ -36,6 +37,7 @@ export const MegaMenu = memo(
     const state = chrome.useState();
     const [patchPreferences] = usePatchUserPreferencesMutation();
     const pinnedItems = usePinnedItems();
+    const { isLoading: starredItemsLoading, isError: starredItemsError } = useSyncStarredItemsInNav();
 
     // Remove profile, help, and home from tree — home is reachable via the logo
     const navItems = navTree
@@ -118,6 +120,8 @@ export const MegaMenu = memo(
                     onClick={state.megaMenuDocked ? undefined : onClose}
                     activeItem={activeItem}
                     onPin={onPinItem}
+                    loadingChildren={link.id === 'starred' && starredItemsLoading}
+                    childrenLoadError={link.id === 'starred' && starredItemsError}
                   />
                 ))}
               </ul>
