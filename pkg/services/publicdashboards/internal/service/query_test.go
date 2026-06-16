@@ -1513,6 +1513,41 @@ func TestSanitizeDataV2(t *testing.T) {
 	})
 }
 
+func TestSanitizeData(t *testing.T) {
+	t.Run("removes query expressions from panels inside collapsed rows", func(t *testing.T) {
+		data := simplejson.NewFromAny(map[string]interface{}{
+			"panels": []interface{}{
+				map[string]interface{}{
+					"id":        3,
+					"type":      "row",
+					"collapsed": true,
+					"panels": []interface{}{
+						map[string]interface{}{
+							"id": 4,
+							"targets": []interface{}{
+								map[string]interface{}{
+									"expr":   "go_goroutines{job=\"grafana\"}",
+									"query":  "SELECT * FROM metrics",
+									"rawSql": "SELECT 1",
+									"refId":  "A",
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+
+		sanitizeData(data)
+
+		target := data.Get("panels").GetIndex(0).Get("panels").GetIndex(0).Get("targets").GetIndex(0)
+		assert.Empty(t, target.Get("expr").MustString())
+		assert.Empty(t, target.Get("query").MustString())
+		assert.Empty(t, target.Get("rawSql").MustString())
+		assert.Equal(t, "A", target.Get("refId").MustString())
+	})
+}
+
 func TestIsDashboardV2(t *testing.T) {
 	tests := []struct {
 		apiVersion string
