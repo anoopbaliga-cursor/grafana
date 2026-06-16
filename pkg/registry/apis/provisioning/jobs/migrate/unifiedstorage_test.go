@@ -501,7 +501,7 @@ func TestUnifiedStorageMigrator_TakeoverAllowlist(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("only successfully exported resources appear in allowlist", func(t *testing.T) {
+	t.Run("aborts instance migrate when export fails to avoid deleting unmanaged resources", func(t *testing.T) {
 		exportWorker := jobs.NewMockWorker(t)
 		syncWorker := jobs.NewMockWorker(t)
 		pr := jobs.NewMockJobProgressRecorder(t)
@@ -514,7 +514,6 @@ func TestUnifiedStorageMigrator_TakeoverAllowlist(t *testing.T) {
 		})
 		pr.On("SetMessage", mock.Anything, mock.Anything).Return()
 		pr.On("StrictMaxErrors", 1).Return()
-		pr.On("ResetResults", false).Return()
 
 		pr.On("Record", mock.Anything, mock.Anything).Return()
 
@@ -531,23 +530,12 @@ func TestUnifiedStorageMigrator_TakeoverAllowlist(t *testing.T) {
 				WithError(errors.New("export failed")).Build())
 		}).Return(nil)
 
-		syncWorker.On("Process", mock.MatchedBy(func(ctx context.Context) bool {
-			al := resources.TakeoverAllowlistFromContext(ctx)
-			if al == nil {
-				return false
-			}
-			hasOk := al.Contains(resources.ResourceIdentifier{Name: "dash-ok", Group: "dashboard.grafana.app", Kind: "Dashboard"})
-			hasFail := al.Contains(resources.ResourceIdentifier{Name: "dash-fail", Group: "dashboard.grafana.app", Kind: "Dashboard"})
-			return hasOk && !hasFail
-		}), repo, mock.MatchedBy(func(job provisioning.Job) bool {
-			return job.Spec.Pull != nil
-		}), pr).Return(nil)
-
-		nc.On("Clean", mock.Anything, "test-ns", pr).Return(nil)
-
 		migrator := NewUnifiedStorageMigrator(nc, exportWorker, syncWorker)
 		err := migrator.Migrate(context.Background(), repo, provisioning.Job{Spec: provisioning.JobSpec{Migrate: &provisioning.MigrateJobOptions{}}}, pr)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "export failures would cause unmanaged resources to be deleted")
+		syncWorker.AssertNotCalled(t, "Process", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		nc.AssertNotCalled(t, "Clean", mock.Anything, mock.Anything, mock.Anything)
 	})
 }
 

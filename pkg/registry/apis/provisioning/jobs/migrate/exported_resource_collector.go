@@ -15,8 +15,9 @@ import (
 // can claim those specific unmanaged resources.
 type exportedResourceCollector struct {
 	jobs.JobProgressRecorder
-	mu       sync.Mutex
-	exported map[resources.ResourceIdentifier]struct{}
+	mu             sync.Mutex
+	exported       map[resources.ResourceIdentifier]struct{}
+	exportFailures int
 }
 
 func newExportedResourceCollector(inner jobs.JobProgressRecorder) *exportedResourceCollector {
@@ -29,6 +30,12 @@ func newExportedResourceCollector(inner jobs.JobProgressRecorder) *exportedResou
 func (c *exportedResourceCollector) Record(ctx context.Context, result jobs.JobResourceResult) {
 	c.JobProgressRecorder.Record(ctx, result)
 
+	if result.Error() != nil {
+		c.mu.Lock()
+		c.exportFailures++
+		c.mu.Unlock()
+	}
+
 	if result.Error() == nil && result.Name() != "" &&
 		result.Action() == repository.FileActionCreated {
 		c.mu.Lock()
@@ -39,6 +46,14 @@ func (c *exportedResourceCollector) Record(ctx context.Context, result jobs.JobR
 		}] = struct{}{}
 		c.mu.Unlock()
 	}
+}
+
+// HasExportFailures reports whether any resource failed to export.
+func (c *exportedResourceCollector) HasExportFailures() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.exportFailures > 0
 }
 
 // ExportedResources returns an immutable, concurrency-safe allowlist of

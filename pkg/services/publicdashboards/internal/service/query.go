@@ -447,8 +447,8 @@ func sanitizeData(data *simplejson.Json) {
 	for _, panelObj := range data.Get("panels").MustArray() {
 		panel := simplejson.NewFromAny(panelObj)
 
-		// rows are layout-only and don't carry query targets, so skip them
-		if panel.Get("type").MustString() == "row" {
+		if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
+			sanitizeData(panel)
 			continue
 		}
 

@@ -1513,6 +1513,43 @@ func TestSanitizeDataV2(t *testing.T) {
 	})
 }
 
+func TestSanitizeData_collapsedRow(t *testing.T) {
+	data := simplejson.NewFromAny(map[string]interface{}{
+		"panels": []interface{}{
+			map[string]interface{}{
+				"id":        1,
+				"type":      "row",
+				"collapsed": true,
+				"panels": []interface{}{
+					map[string]interface{}{
+						"id":   2,
+						"type": "timeseries",
+						"targets": []interface{}{
+							map[string]interface{}{
+								"expr":    "up{job=\"grafana\"}",
+								"query":   "SELECT 1",
+								"rawSql":  "SELECT * FROM metrics",
+								"refId":   "A",
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	sanitizeData(data)
+
+	nestedTarget := simplejson.NewFromAny(data.Get("panels").MustArray()[0]).
+		Get("panels").MustArray()[0]
+	target := simplejson.NewFromAny(nestedTarget).Get("targets").MustArray()[0]
+	query := simplejson.NewFromAny(target)
+
+	assert.Empty(t, query.Get("expr").MustString())
+	assert.Empty(t, query.Get("query").MustString())
+	assert.Empty(t, query.Get("rawSql").MustString())
+}
+
 func TestIsDashboardV2(t *testing.T) {
 	tests := []struct {
 		apiVersion string

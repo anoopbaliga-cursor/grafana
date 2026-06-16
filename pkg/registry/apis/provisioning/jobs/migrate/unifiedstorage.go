@@ -58,6 +58,11 @@ func (m *UnifiedStorageMigrator) Migrate(ctx context.Context, repo repository.Re
 		return fmt.Errorf("export resources: %w", err)
 	}
 
+	target := repo.Config().Spec.Sync.Target
+	if target != provisioning.SyncTargetTypeFolder && target != provisioning.SyncTargetTypeFolderless && len(options.Resources) == 0 && collector.HasExportFailures() {
+		return fmt.Errorf("export resources: migration aborted because export failures would cause unmanaged resources to be deleted during namespace cleanup")
+	}
+
 	// Build a takeover allowlist from the exported resource identifiers so the
 	// sync phase can claim those specific unmanaged resources without rejecting them.
 	ctx = resources.WithTakeoverAllowlist(ctx, collector.ExportedResources())
@@ -84,7 +89,6 @@ func (m *UnifiedStorageMigrator) Migrate(ctx context.Context, repo repository.Re
 	// destructive — the user only asked to take over the named ones.
 	// Folderless repositories also coexist with unmanaged resources, so they
 	// must never trigger a namespace clean.
-	target := repo.Config().Spec.Sync.Target
 	if target != provisioning.SyncTargetTypeFolder && target != provisioning.SyncTargetTypeFolderless && len(options.Resources) == 0 {
 		progress.SetMessage(ctx, "clean namespace")
 		if err := m.namespaceCleaner.Clean(ctx, namespace, progress); err != nil {

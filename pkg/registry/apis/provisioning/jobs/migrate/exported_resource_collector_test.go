@@ -55,6 +55,23 @@ func TestExportedResourceCollector(t *testing.T) {
 		assert.False(t, allowlist.Contains(resources.ResourceIdentifier{Name: "dash-1", Group: "dashboard.grafana.app", Kind: "Dashboard"}))
 	})
 
+	t.Run("tracks export failures", func(t *testing.T) {
+		inner := jobs.NewMockJobProgressRecorder(t)
+		inner.EXPECT().Record(ctx, jobs.NewGVKResult("dash-1", dashboardGVK).
+			WithAction(repository.FileActionIgnored).
+			WithError(assert.AnError).Build())
+
+		collector := newExportedResourceCollector(inner)
+
+		require.False(t, collector.HasExportFailures())
+
+		collector.Record(ctx, jobs.NewGVKResult("dash-1", dashboardGVK).
+			WithAction(repository.FileActionIgnored).
+			WithError(assert.AnError).Build())
+
+		assert.True(t, collector.HasExportFailures())
+	})
+
 	t.Run("ignores ignored resources", func(t *testing.T) {
 		inner := jobs.NewMockJobProgressRecorder(t)
 		inner.EXPECT().Record(ctx, jobs.NewGVKResult("dash-1", dashboardGVK).
