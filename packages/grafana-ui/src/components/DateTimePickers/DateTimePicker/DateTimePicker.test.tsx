@@ -222,10 +222,6 @@ describe('Date time picker', () => {
       const hourElement = screen.getByText('00:00');
       expect(hourElement).toBeVisible();
 
-      // // select the hour value and check it's still visible
-      // await userEvent.click(hourElement);
-      // expect(hourElement).toBeVisible();
-
       // click outside the overlay and check the hour element is no longer visible
       await userEvent.click(document.body);
       expect(screen.queryByText('00:00')).not.toBeInTheDocument();
