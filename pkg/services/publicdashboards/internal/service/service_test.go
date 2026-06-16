@@ -416,10 +416,16 @@ func TestIntegrationGetPublicDashboardForView(t *testing.T) {
 				for _, panelObj := range dashboardFullWithMeta.Dashboard.Get("panels").MustArray() {
 					panel := simplejson.NewFromAny(panelObj)
 
-					// if the panel is a row and it is collapsed, get the queries from the panels inside the row
 					if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
-						// recursive call to get queries from panels inside a row
-						sanitizeData(panel)
+						for _, nestedPanelObj := range panel.Get("panels").MustArray() {
+							nestedPanel := simplejson.NewFromAny(nestedPanelObj)
+							for _, targetObj := range nestedPanel.Get("targets").MustArray() {
+								target := simplejson.NewFromAny(targetObj)
+								assert.Empty(t, target.Get("expr").MustString())
+								assert.Empty(t, target.Get("query").MustString())
+								assert.Empty(t, target.Get("rawSql").MustString())
+							}
+						}
 						continue
 					}
 
@@ -548,6 +554,15 @@ func TestIntegrationGetPublicDashboardForView(t *testing.T) {
 			for _, panelObj := range result.Dashboard.Get("panels").MustArray() {
 				panel := simplejson.NewFromAny(panelObj)
 				if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
+					for _, nestedPanelObj := range panel.Get("panels").MustArray() {
+						nestedPanel := simplejson.NewFromAny(nestedPanelObj)
+						for _, targetObj := range nestedPanel.Get("targets").MustArray() {
+							target := simplejson.NewFromAny(targetObj)
+							assert.Empty(t, target.Get("expr").MustString())
+							assert.Empty(t, target.Get("query").MustString())
+							assert.Empty(t, target.Get("rawSql").MustString())
+						}
+					}
 					continue
 				}
 				for _, targetObj := range panel.Get("targets").MustArray() {
