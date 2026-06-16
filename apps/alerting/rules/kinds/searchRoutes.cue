@@ -49,6 +49,7 @@ searchRoutes: {
 	namespaced: {
 		"/search/alertrules": {
 			GET: {
+				// These search routes are experimental and subject to change without deprecation until stabilized
 				name: "getSearchAlertRules"
 				request: {
 					query: #alertRuleSearchQuery
@@ -64,6 +65,7 @@ searchRoutes: {
 		}
 		"/search/recordingrules": {
 			GET: {
+				// These search routes are experimental and subject to change without deprecation until stabilized
 				name: "getSearchRecordingRules"
 				request: {
 					query: #recordingRuleSearchQuery
@@ -79,6 +81,7 @@ searchRoutes: {
 		}
 		"/search": {
 			GET: {
+				// These search routes are experimental and subject to change without deprecation until stabilized
 				name: "getSearchRules"
 				request: {
 					query: #ruleSearchQuery
