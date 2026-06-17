@@ -413,23 +413,7 @@ func TestIntegrationGetPublicDashboardForView(t *testing.T) {
 				// hide the timepicker if the time selection is disabled
 				assert.Equal(t, test.StoreResp.pd.TimeSelectionEnabled, !dashboardFullWithMeta.Dashboard.Get("timepicker").Get("hidden").MustBool())
 
-				for _, panelObj := range dashboardFullWithMeta.Dashboard.Get("panels").MustArray() {
-					panel := simplejson.NewFromAny(panelObj)
-
-					// if the panel is a row and it is collapsed, get the queries from the panels inside the row
-					if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
-						// recursive call to get queries from panels inside a row
-						sanitizeData(panel)
-						continue
-					}
-
-					for _, targetObj := range panel.Get("targets").MustArray() {
-						target := simplejson.NewFromAny(targetObj)
-						assert.Empty(t, target.Get("expr").MustString())
-						assert.Empty(t, target.Get("query").MustString())
-						assert.Empty(t, target.Get("rawSql").MustString())
-					}
-				}
+				assertSanitizedPanelTargets(t, dashboardFullWithMeta.Dashboard.Get("panels").MustArray())
 			}
 		})
 	}
@@ -545,18 +529,7 @@ func TestIntegrationGetPublicDashboardForView(t *testing.T) {
 			assert.True(t, result.Dashboard.Get("timepicker").Get("hidden").MustBool())
 
 			// v1 path: panel targets should be sanitized
-			for _, panelObj := range result.Dashboard.Get("panels").MustArray() {
-				panel := simplejson.NewFromAny(panelObj)
-				if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
-					continue
-				}
-				for _, targetObj := range panel.Get("targets").MustArray() {
-					target := simplejson.NewFromAny(targetObj)
-					assert.Empty(t, target.Get("expr").MustString())
-					assert.Empty(t, target.Get("query").MustString())
-					assert.Empty(t, target.Get("rawSql").MustString())
-				}
-			}
+			assertSanitizedPanelTargets(t, result.Dashboard.Get("panels").MustArray())
 		})
 	}
 }
@@ -1064,6 +1037,26 @@ func TestIntegrationCreatePublicDashboard(t *testing.T) {
 		// if share type is empty should be populated with public by default
 		assert.Equal(t, models.PublicShareType, pubdash.Share)
 	})
+}
+
+func assertSanitizedPanelTargets(t *testing.T, panels []any) {
+	t.Helper()
+
+	for _, panelObj := range panels {
+		panel := simplejson.NewFromAny(panelObj)
+
+		if panel.Get("type").MustString() == "row" && panel.Get("collapsed").MustBool() {
+			assertSanitizedPanelTargets(t, panel.Get("panels").MustArray())
+			continue
+		}
+
+		for _, targetObj := range panel.Get("targets").MustArray() {
+			target := simplejson.NewFromAny(targetObj)
+			assert.Empty(t, target.Get("expr").MustString())
+			assert.Empty(t, target.Get("query").MustString())
+			assert.Empty(t, target.Get("rawSql").MustString())
+		}
+	}
 }
 
 func assertFalseIfNull(t *testing.T, expectedValue bool, nullableValue *bool) {

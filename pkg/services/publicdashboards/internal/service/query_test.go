@@ -1391,6 +1391,44 @@ func buildJsonDataWithTimeRange(from, to, timezone string) *simplejson.Json {
 	})
 }
 
+func TestSanitizeData(t *testing.T) {
+	t.Run("removes expr, query, rawSql from panels inside collapsed rows", func(t *testing.T) {
+		data := simplejson.NewFromAny(map[string]interface{}{
+			"panels": []interface{}{
+				map[string]interface{}{
+					"id":        1,
+					"type":      "row",
+					"collapsed": true,
+					"panels": []interface{}{
+						map[string]interface{}{
+							"id":   2,
+							"type": "timeseries",
+							"targets": []interface{}{
+								map[string]interface{}{
+									"expr":   "up{job=\"grafana\"}",
+									"query":  "SELECT 1",
+									"rawSql": "SELECT * FROM secrets",
+									"refId":  "A",
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+
+		sanitizeData(data)
+
+		nestedPanel := simplejson.NewFromAny(data.Get("panels").MustArray()[0]).Get("panels").MustArray()[0]
+		target := simplejson.NewFromAny(nestedPanel).Get("targets").MustArray()[0]
+		targetJSON := simplejson.NewFromAny(target)
+		assert.Empty(t, targetJSON.Get("expr").MustString())
+		assert.Empty(t, targetJSON.Get("query").MustString())
+		assert.Empty(t, targetJSON.Get("rawSql").MustString())
+		assert.Equal(t, "A", targetJSON.Get("refId").MustString())
+	})
+}
+
 func TestSanitizeDataV2(t *testing.T) {
 	t.Run("removes expr, query, rawSql from query specs", func(t *testing.T) {
 		data := simplejson.NewFromAny(map[string]interface{}{
