@@ -1,0 +1,2 @@
+# Runtime hook output (audit logs, secret-scan findings) should not be committed.
+.logs/

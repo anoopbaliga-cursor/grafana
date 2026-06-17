@@ -73,7 +73,16 @@ public/css/*.min.css
 .vscode/
 !.vscode/launch.json
 .vs/
-.cursor/
+# Ignore personal/local Cursor files by default, but keep the committed demo
+# customization stack (rules, skills, hooks, sub-agents) and the cloud env config.
+.cursor/*
+!.cursor/environment.json
+!.cursor/rules/
+!.cursor/skills/
+!.cursor/agents/
+!.cursor/hooks/
+!.cursor/hooks.json
+.cursor/hooks/.logs/
 .devcontainer/
 .claude/
 

@@ -1,0 +1,39 @@
+---
+description: Grafana Go backend conventions (service structure, interfaces, DI, errors). Apply when editing Go files under pkg/ or apps/.
+globs: pkg/**/*.go,apps/**/*.go
+alwaysApply: false
+---
+
+# Grafana Go backend conventions
+
+Scoped to Go files via the `globs` above. Mirror the patterns in the package you are
+editing rather than introducing new ones.
+
+## Structure
+
+- Business logic lives in `pkg/services/<domain>/`, not in API handlers under `pkg/api/`.
+  API handlers should be thin and delegate to a service.
+- Each service defines a `Service` interface in the same package, with the
+  implementation alongside it (see `pkg/services/team/team.go`).
+- Database access goes through `sqlstore`; do not hand-roll SQL in handlers.
+
+## Dependency injection
+
+- Wiring is generated with Wire. After changing a service constructor or its
+  dependencies, run `make gen-go`. Wire catches circular dependencies at compile time.
+
+## Errors & context
+
+- Always thread `context.Context` as the first argument through service calls.
+- Wrap and return errors; do not panic in request paths. Use the existing
+  domain error helpers where the package provides them.
+
+## Security
+
+- Prevent SQL injection (use parameterized queries via sqlstore), command injection,
+  and never log secrets or tokens.
+
+## Tests
+
+- Add `_test.go` coverage for new behavior. Run a focused test with
+  `go test -run TestName ./pkg/services/<domain>/`.
