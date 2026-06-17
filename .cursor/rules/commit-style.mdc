@@ -1,0 +1,24 @@
+---
+description: How to write git commits and scope PRs in this repo.
+alwaysApply: true
+---
+
+# Commit & PR conventions
+
+This rule is always applied (it is a "what" that holds for every change), so it stays
+small to avoid bloating the context window.
+
+## Commit messages
+
+- Use Conventional Commits: `type(scope): summary`.
+  Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `build`, `ci`.
+  Example: `feat(stat-panel): add description text option`.
+- Keep the summary in the imperative mood and under ~72 characters.
+- Create a separate commit for each logical change; do not batch unrelated changes.
+
+## Pull requests
+
+- Keep frontend and backend changes in separate PRs (they deploy at different cadences).
+- Do not force-push or amend commits unless explicitly asked.
+- Before pushing, follow the Human Review Gate in `AGENTS.md`: summarize the changes
+  and wait for explicit approval.

@@ -1,0 +1,45 @@
+---
+description: Grafana frontend conventions for React/TypeScript code (components, styling, state, tests). Apply when editing TS/TSX under public/app or packages.
+globs: public/app/**/*.{ts,tsx},packages/*/src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Grafana frontend conventions
+
+Follow the patterns already used in the surrounding code. These rules are scoped to
+frontend TypeScript/React files via the `globs` above, so they only load into context
+when you are actually working on frontend code.
+
+## Components
+
+- Use function components with hooks. Do not add new class components.
+- Keep components focused; colocate a `ComponentName.test.tsx` next to new components.
+
+## Styling
+
+- Use Emotion via the `useStyles2(getStyles)` hook from `@grafana/ui`. Define a
+  `getStyles(theme: GrafanaTheme2)` function and read colors/spacing from the `theme`
+  (e.g. `theme.spacing(2)`, `theme.colors.text.secondary`). Never hardcode hex colors.
+- Do not introduce inline `style={{ ... }}` for anything theme-related.
+
+## State & data fetching
+
+- Use Redux Toolkit slices (not legacy connect/mapStateToProps) for app state.
+- Use RTK Query for data fetching where a service already exposes it.
+
+## Internationalization
+
+- All user-facing strings must be wrapped with the `t()` helper from `@grafana/i18n`
+  (see existing panels, e.g. `public/app/plugins/panel/stat/module.tsx`). After adding
+  strings, run `make i18n-extract`.
+
+## Logging
+
+- Never use `console.log`/`console.warn`/`console.error` in shipped frontend code.
+  Use the structured logger from `@grafana/runtime`
+  (`logInfo`, `logWarning`, `logError`, or `createMonitoringLogger(source)`).
+
+## Tests
+
+- Write tests with React Testing Library + Jest. Run a single file with
+  `yarn jest --no-watch <path>` (the default `yarn test` script enables `--watch`).
