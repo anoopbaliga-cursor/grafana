@@ -480,6 +480,85 @@ func TestCanAdminPlugin(t *testing.T) {
 	}
 }
 
+func TestRoleAuth(t *testing.T) {
+	tests := []struct {
+		desc       string
+		middleware web.Handler
+		orgRole    org.RoleType
+		expCode    int
+		expReached bool
+	}{
+		{
+			desc:       "viewer denied editor-only API",
+			middleware: ReqEditorRole,
+			orgRole:    org.RoleViewer,
+			expCode:    http.StatusForbidden,
+			expReached: false,
+		},
+		{
+			desc:       "editor allowed editor-only API",
+			middleware: ReqEditorRole,
+			orgRole:    org.RoleEditor,
+			expCode:    http.StatusOK,
+			expReached: true,
+		},
+		{
+			desc:       "admin allowed editor-only API",
+			middleware: ReqEditorRole,
+			orgRole:    org.RoleAdmin,
+			expCode:    http.StatusOK,
+			expReached: true,
+		},
+		{
+			desc:       "viewer denied admin-only API",
+			middleware: ReqOrgAdmin,
+			orgRole:    org.RoleViewer,
+			expCode:    http.StatusForbidden,
+			expReached: false,
+		},
+		{
+			desc:       "editor denied admin-only API",
+			middleware: ReqOrgAdmin,
+			orgRole:    org.RoleEditor,
+			expCode:    http.StatusForbidden,
+			expReached: false,
+		},
+		{
+			desc:       "admin allowed admin-only API",
+			middleware: ReqOrgAdmin,
+			orgRole:    org.RoleAdmin,
+			expCode:    http.StatusOK,
+			expReached: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			var reached bool
+			server := web.New()
+			server.Use(contextProvider(func(c *contextmodel.ReqContext) {
+				c.OrgRole = tt.orgRole
+			}))
+			server.Use(tt.middleware)
+			server.Get("/api/secure", func(c *contextmodel.ReqContext) {
+				reached = true
+				c.Resp.WriteHeader(http.StatusOK)
+			})
+
+			request, err := http.NewRequest(http.MethodGet, "/api/secure", nil)
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+
+			server.ServeHTTP(recorder, request)
+
+			res := recorder.Result()
+			assert.Equal(t, tt.expCode, res.StatusCode)
+			assert.Equal(t, tt.expReached, reached)
+			require.NoError(t, res.Body.Close())
+		})
+	}
+}
+
 func contextProvider(modifiers ...func(c *contextmodel.ReqContext)) web.Handler {
 	return func(c *web.Context) {
 		reqCtx := &contextmodel.ReqContext{
