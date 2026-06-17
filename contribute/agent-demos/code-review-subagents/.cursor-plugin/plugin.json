@@ -1,0 +1,19 @@
+{
+  "name": "code-review-subagent-demo",
+  "displayName": "Code Review Subagent Demo",
+  "version": "1.0.0",
+  "description": "Demonstrates parallel Cursor subagents for structured code review: correctness, maintainability, and test coverage reviewers orchestrated by a single skill.",
+  "author": {
+    "name": "Grafana Cloud Agent"
+  },
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "subagents",
+    "demo",
+    "parallel-review",
+    "grafana"
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/"
+}
