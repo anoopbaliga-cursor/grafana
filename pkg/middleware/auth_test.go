@@ -35,6 +35,86 @@ func setupAuthMiddlewareTest(t *testing.T, identity *authn.Identity, authErr err
 	}, featuremgmt.WithFeatures())
 }
 
+func TestRoleAuth_Middleware(t *testing.T) {
+	tests := []struct {
+		desc           string
+		orgRole        org.RoleType
+		authMiddleware web.Handler
+		expecedReached bool
+		expectedCode   int
+	}{
+		{
+			desc:           "ReqEditorRole should allow editor",
+			orgRole:        org.RoleEditor,
+			authMiddleware: ReqEditorRole,
+			expecedReached: true,
+			expectedCode:   http.StatusOK,
+		},
+		{
+			desc:           "ReqEditorRole should allow admin",
+			orgRole:        org.RoleAdmin,
+			authMiddleware: ReqEditorRole,
+			expecedReached: true,
+			expectedCode:   http.StatusOK,
+		},
+		{
+			desc:           "ReqEditorRole should deny viewer",
+			orgRole:        org.RoleViewer,
+			authMiddleware: ReqEditorRole,
+			expecedReached: false,
+			expectedCode:   http.StatusForbidden,
+		},
+		{
+			desc:           "ReqOrgAdmin should allow admin",
+			orgRole:        org.RoleAdmin,
+			authMiddleware: ReqOrgAdmin,
+			expecedReached: true,
+			expectedCode:   http.StatusOK,
+		},
+		{
+			desc:           "ReqOrgAdmin should deny editor",
+			orgRole:        org.RoleEditor,
+			authMiddleware: ReqOrgAdmin,
+			expecedReached: false,
+			expectedCode:   http.StatusForbidden,
+		},
+		{
+			desc:           "ReqOrgAdmin should deny viewer",
+			orgRole:        org.RoleViewer,
+			authMiddleware: ReqOrgAdmin,
+			expecedReached: false,
+			expectedCode:   http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			server := web.New()
+			server.Use(contextProvider(func(c *contextmodel.ReqContext) {
+				c.OrgRole = tt.orgRole
+				c.IsSignedIn = true
+			}))
+			server.Use(tt.authMiddleware)
+
+			var reached bool
+			server.Get("/api/secure", func(c *contextmodel.ReqContext) {
+				reached = true
+				c.Resp.WriteHeader(http.StatusOK)
+			})
+
+			req, err := http.NewRequest(http.MethodGet, "/api/secure", nil)
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+			server.ServeHTTP(recorder, req)
+
+			res := recorder.Result()
+			assert.Equal(t, tt.expecedReached, reached)
+			assert.Equal(t, tt.expectedCode, res.StatusCode)
+			require.NoError(t, res.Body.Close())
+		})
+	}
+}
+
 func TestAuth_Middleware(t *testing.T) {
 	ac := &actest.FakeAccessControl{}
 	acGrant := &actest.FakeAccessControl{ExpectedEvaluate: true}
