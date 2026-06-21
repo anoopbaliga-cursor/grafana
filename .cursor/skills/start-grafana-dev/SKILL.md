@@ -11,9 +11,16 @@ exactly rather than re-deriving them each time.
 ## Prerequisites (run once per shell)
 
 ```bash
-nvm use            # selects Node from .nvmrc (v24.11.0)
+nvm install        # installs + selects the Node version in .nvmrc (v24.11.0)
 corepack enable    # enables the bundled Yarn 4.x
 ```
+
+Use `nvm install` (not just `nvm use`): `nvm use` fails if the pinned version
+isn't installed yet. The exact version matters — the frontend's webpack configs
+are TypeScript, and older Node (e.g. v22) fails to load them with
+`Unknown file extension ".ts"`. After switching, confirm with `node -v` that you
+are actually on `v24.11.0`; if a different `node` is earlier on your `PATH`, the
+frontend build will break even though `nvm` reported success.
 
 If frontend dependencies have never been installed in this checkout:
 
@@ -40,7 +47,8 @@ yarn start
 ```
 
 The webpack dev server watches for changes; the backend proxies to it. First compile
-takes ~45 seconds.
+takes ~45 seconds. If you see `Unknown file extension ".ts"` errors instead, you are on
+the wrong Node version — re-run `nvm install` and verify `node -v` shows `v24.11.0`.
 
 ## Confirm it is up
 
