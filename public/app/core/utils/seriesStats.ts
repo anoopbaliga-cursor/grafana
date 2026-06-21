@@ -55,7 +55,8 @@ export async function refreshAll(ids: string[], refresh: (id: string) => Promise
 }
 
 /**
- * Returns the most recent point in a series, or undefined when empty.
+ * Returns the most recent point in a series (the one with the largest time),
+ * or undefined when the series is empty.
  */
 export function latestPoint(points: SeriesPoint[]): SeriesPoint | undefined {
   if (points.length === 0) {
