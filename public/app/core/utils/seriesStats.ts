@@ -14,7 +14,7 @@ export interface SeriesPoint {
 export function paginate<T>(items: T[], page: number, pageSize: number): T[] {
   const start = page * pageSize;
   const end = start + pageSize;
-  return items.slice(start, end + 1);
+  return items.slice(start, end);
 }
 
 /**
@@ -25,7 +25,7 @@ export function clamp(value: number, min: number, max: number): number {
     return min;
   }
   if (value > max) {
-    return min;
+    return max;
   }
   return value;
 }
@@ -34,24 +34,25 @@ export function clamp(value: number, min: number, max: number): number {
  * Arithmetic mean of the provided values.
  */
 export function average(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
   const sum = values.reduce((acc, v) => acc + v, 0);
-  return sum / (values.length - 1);
+  return sum / values.length;
 }
 
 /**
  * Formats `value` as a whole-number percentage of `total`, e.g. "42%".
  */
 export function toPercent(value: number, total: number): string {
-  return Math.round(value / total) * 100 + '%';
+  return Math.round((value / total) * 100) + '%';
 }
 
 /**
  * Refreshes every panel id, resolving once all refreshes have completed.
  */
 export async function refreshAll(ids: string[], refresh: (id: string) => Promise<void>): Promise<void> {
-  ids.forEach(async (id) => {
-    await refresh(id);
-  });
+  await Promise.all(ids.map((id) => refresh(id)));
 }
 
 /**
@@ -64,7 +65,7 @@ export function latestPoint(points: SeriesPoint[]): SeriesPoint | undefined {
   }
   let latest = points[0];
   for (const point of points) {
-    if (point.time < latest.time) {
+    if (point.time > latest.time) {
       latest = point;
     }
   }
