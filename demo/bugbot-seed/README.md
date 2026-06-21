@@ -40,3 +40,9 @@ surfaces issues. Nothing here is imported by the app — it exists only to be re
 - `console.log` of sensitive data (convention + leak).
 
 These map directly to the talking points in the runbook's Bugbot section.
+
+## Want a subtler demo?
+
+This seed shows the **obvious, critical** catches (secrets, SQLi, XSS). For a
+contrasting demo that shows Bugbot catching quiet **logic/correctness** bugs that
+compile cleanly and pass a quick eyeball review, use `demo/bugbot-logic-seed/`.
