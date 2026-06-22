@@ -79,7 +79,7 @@ Paste these **one line at a time**, pressing Enter after each and waiting for it
 finish:
 
 ```bash
-nvm use
+nvm install
 ```
 
 ```bash
@@ -90,12 +90,19 @@ corepack enable
 yarn install --immutable
 ```
 
+After the first command, paste `node -v` and press Enter. It should print **`v24.11.0`**.
+That exact version matters — on an older Node the app's frontend won't build.
+
 **Expected result:** the last command runs for a few minutes and ends with a line like
 `Done with warnings` or `Done in ...` and no red `error:` lines. Warnings are fine.
 
 > **If it goes sideways:**
 > - `nvm: command not found` -> paste: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash`, then close the terminal, open a new one, and start again at step B.
 > - `yarn: command not found` -> re-run `corepack enable`, then try again.
+> - `node -v` shows something other than `v24.11.0` (or later you see an error mentioning
+>   `Unknown file extension ".ts"`) -> re-run `nvm install`, then `node -v` again. If it
+>   still shows the wrong version, a different Node is taking priority; close the terminal,
+>   open a fresh one, and start again at step B.
 
 ### C. Start Grafana (so the UI is ready to show)
 
