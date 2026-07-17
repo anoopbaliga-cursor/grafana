@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Service Uptime — dashboard (before)</title>
+<style>
+  :root {
+    --app-bg: #111217;
+    --panel-bg: #181b1f;
+    --panel-border: rgba(204, 204, 220, 0.07);
+    --header-bg: #141619;
+    --text-primary: #ccccdc;
+    --text-secondary: rgba(204, 204, 220, 0.65);
+    --text-faint: rgba(204, 204, 220, 0.45);
+    --green: #73bf69;
+    --blue: #5794f2;
+    --orange: #ff9830;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; min-height: 100%;
+    background: var(--app-bg);
+    font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text-primary);
+  }
+  .topbar {
+    height: 56px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; background: var(--header-bg);
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .topbar__title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .topbar__title .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .timerange {
+    font-size: 13px; color: var(--text-secondary);
+    border: 1px solid var(--panel-border); border-radius: 3px;
+    padding: 6px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .content { padding: 20px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 3px;
+    height: 200px; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .panel__header {
+    height: 32px; flex: 0 0 32px; display: flex; align-items: center;
+    padding: 0 12px; font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  }
+  .panel__body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .bigvalue__value { font-size: 60px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bigvalue__sub { margin-top: 10px; font-size: 13px; color: var(--text-faint); }
+  .v-green { color: var(--green); }
+  .v-blue { color: var(--blue); }
+  .v-orange { color: var(--orange); }
+  .caption { margin: 22px 4px 0; color: var(--text-faint); font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar__title"><span class="dot"></span> Service Uptime</div>
+    <div class="timerange">🕑 Last 6 hours &nbsp;·&nbsp; 30s</div>
+  </div>
+
+  <div class="content">
+    <div class="row">
+      <div class="panel">
+        <div class="panel__header">Uptime (30d)</div>
+        <div class="panel__body">
+          <div class="bigvalue__value v-green">99.98%</div>
+          <div class="bigvalue__sub">SLA target 99.90%</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__header">Avg Response Time</div>
+        <div class="panel__body">
+          <div class="bigvalue__value v-blue">142<span style="font-size:24px"> ms</span></div>
+          <div class="bigvalue__sub">p95 · last 6h</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__header">Incidents (30d)</div>
+        <div class="panel__body">
+          <div class="bigvalue__value v-orange">2</div>
+          <div class="bigvalue__sub">last: 6 days ago</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">Before &mdash; the Uptime stat is a static number. There is no way to see how it trended.</div>
+  </div>
+</body>
+</html>

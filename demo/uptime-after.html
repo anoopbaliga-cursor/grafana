@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Service Uptime — dashboard (after: click any metric)</title>
+<style>
+  :root {
+    --app-bg: #111217;
+    --panel-bg: #181b1f;
+    --panel-border: rgba(204, 204, 220, 0.07);
+    --header-bg: #141619;
+    --text-primary: #ccccdc;
+    --text-secondary: rgba(204, 204, 220, 0.65);
+    --text-faint: rgba(204, 204, 220, 0.45);
+    --green: #73bf69;
+    --blue: #5794f2;
+    --orange: #ff9830;
+    --red: #e02f44;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; min-height: 100%;
+    background: var(--app-bg);
+    font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text-primary);
+  }
+  .topbar {
+    height: 56px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; background: var(--header-bg);
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .topbar__title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .topbar__title .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .timerange {
+    font-size: 13px; color: var(--text-secondary);
+    border: 1px solid var(--panel-border); border-radius: 3px;
+    padding: 6px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .content { padding: 20px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 3px;
+    height: 200px; display: flex; flex-direction: column; overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .05s ease;
+  }
+  .panel:active { transform: translateY(1px); }
+  .panel__header {
+    height: 32px; flex: 0 0 32px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px; font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  }
+  .panel__body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .bigvalue__value { font-size: 60px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bigvalue__sub { margin-top: 10px; font-size: 13px; color: var(--text-faint); }
+  .v-green { color: var(--green); }
+  .v-blue { color: var(--blue); }
+  .v-orange { color: var(--orange); }
+
+  .hint {
+    font-size: 11px;
+    border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 2px 8px; white-space: nowrap; color: var(--text-faint);
+  }
+  /* accent per metric on hover */
+  .panel[data-metric="uptime"]:hover  { border-color: rgba(115,191,105,0.6); box-shadow: 0 0 0 1px rgba(115,191,105,0.35), 0 6px 20px rgba(0,0,0,0.35); }
+  .panel[data-metric="response"]:hover{ border-color: rgba(87,148,242,0.6);  box-shadow: 0 0 0 1px rgba(87,148,242,0.35), 0 6px 20px rgba(0,0,0,0.35); }
+  .panel[data-metric="incidents"]:hover{border-color: rgba(255,152,48,0.6);  box-shadow: 0 0 0 1px rgba(255,152,48,0.35), 0 6px 20px rgba(0,0,0,0.35); }
+  .panel[data-metric="uptime"]:hover .hint,
+  .panel[data-metric="response"]:hover .hint,
+  .panel[data-metric="incidents"]:hover .hint { color: var(--text-secondary); }
+  .panel.is-active[data-metric="uptime"]  { border-color: rgba(115,191,105,0.6); }
+  .panel.is-active[data-metric="response"]{ border-color: rgba(87,148,242,0.6); }
+  .panel.is-active[data-metric="incidents"]{border-color: rgba(255,152,48,0.6); }
+
+  /* Drill-down graph panel */
+  .drilldown {
+    margin-top: 16px; background: var(--panel-bg);
+    border: 1px solid var(--panel-border); border-radius: 3px;
+    overflow: hidden;
+    max-height: 0; opacity: 0; transform: translateY(-6px);
+    transition: max-height .35s ease, opacity .3s ease, transform .3s ease;
+  }
+  .drilldown.is-open { max-height: 460px; opacity: 1; transform: translateY(0); }
+  .drilldown__header {
+    height: 40px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--text-primary);
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .drilldown__header .sub { font-size: 12px; font-weight: 400; color: var(--text-faint); }
+  .drilldown__body { padding: 14px 10px 6px; }
+  .close-x { cursor: pointer; color: var(--text-faint); font-size: 16px; padding: 0 4px; }
+  .close-x:hover { color: var(--text-primary); }
+  .caption { margin: 22px 4px 0; color: var(--text-faint); font-size: 12px; }
+
+  .axis-label { fill: var(--text-faint); font-size: 11px; font-family: inherit; }
+  .grid-line { stroke: rgba(204,204,220,0.08); stroke-width: 1; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar__title"><span class="dot"></span> Service Uptime</div>
+    <div class="timerange">🕑 Last 6 hours &nbsp;·&nbsp; 30s</div>
+  </div>
+
+  <div class="content">
+    <div class="row">
+      <div class="panel is-clickable" data-metric="uptime">
+        <div class="panel__header"><span>Uptime (30d)</span><span class="hint">Click for 30-day trend ↗</span></div>
+        <div class="panel__body">
+          <div class="bigvalue__value v-green">99.98%</div>
+          <div class="bigvalue__sub">SLA target 99.90%</div>
+        </div>
+      </div>
+
+      <div class="panel is-clickable" data-metric="response">
+        <div class="panel__header"><span>Avg Response Time</span><span class="hint">Click for 30-day trend ↗</span></div>
+        <div class="panel__body">
+          <div class="bigvalue__value v-blue">142<span style="font-size:24px"> ms</span></div>
+          <div class="bigvalue__sub">p95 · last 6h</div>
+        </div>
+      </div>
+
+      <div class="panel is-clickable" data-metric="incidents">
+        <div class="panel__header"><span>Incidents (30d)</span><span class="hint">Click for 30-day trend ↗</span></div>
+        <div class="panel__body">
+          <div class="bigvalue__value v-orange">2</div>
+          <div class="bigvalue__sub">last: 6 days ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drill-down graph, generated on click of any metric -->
+    <div class="drilldown" id="drilldown">
+      <div class="drilldown__header">
+        <span id="ddTitle">Uptime &mdash; last 30 days</span>
+        <span class="close-x" id="closeBtn" title="Close">✕</span>
+      </div>
+      <div class="drilldown__body">
+        <svg id="chart" width="100%" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+    </div>
+
+    <div class="caption">After &mdash; every metric is clickable. Clicking one generates a graph of the last month.</div>
+  </div>
+
+  <script>
+    const days = 30;
+    const today = new Date();
+    const dates = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(today); d.setDate(today.getDate() - (days - 1 - i)); dates.push(d);
+    }
+
+    // Per-metric config: data + chart styling
+    const metrics = {
+      uptime: {
+        title: 'Uptime &mdash; last 30 days',
+        color: '#73bf69', type: 'line', yMin: 99.5, yMax: 100.0,
+        yTicks: [99.5, 99.6, 99.7, 99.8, 99.9, 100.0], fmt: v => v.toFixed(1) + '%',
+        data: [99.99,100,99.98,99.97,100,99.99,99.96,99.98,100,99.99,99.97,99.98,99.99,100,99.95,99.98,99.99,99.97,100,99.98,99.99,99.96,99.62,99.80,99.97,99.99,100,99.98,99.99,99.98],
+        markLow: true
+      },
+      response: {
+        title: 'Avg Response Time &mdash; last 30 days',
+        color: '#5794f2', type: 'line', yMin: 100, yMax: 240,
+        yTicks: [100, 140, 180, 220], fmt: v => Math.round(v) + ' ms',
+        data: [138,142,135,140,145,139,150,143,137,141,148,144,139,142,151,147,140,138,145,143,149,158,214,176,150,144,141,139,143,142],
+        markHigh: true
+      },
+      incidents: {
+        title: 'Incidents &mdash; last 30 days',
+        color: '#ff9830', type: 'bar', yMin: 0, yMax: 2,
+        yTicks: [0, 1, 2], fmt: v => String(v),
+        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0]
+      }
+    };
+
+    const W = 960, H = 320;
+    const m = { top: 20, right: 24, bottom: 34, left: 52 };
+    const iw = W - m.left - m.right;
+    const ih = H - m.top - m.bottom;
+
+    function build(key) {
+      const cfg = metrics[key];
+      const x = i => m.left + (iw * i) / (days - 1);
+      const y = v => m.top + ih * (1 - (v - cfg.yMin) / (cfg.yMax - cfg.yMin));
+      let s = '';
+
+      cfg.yTicks.forEach(t => {
+        s += `<line class="grid-line" x1="${m.left}" y1="${y(t)}" x2="${W - m.right}" y2="${y(t)}" />`;
+        s += `<text class="axis-label" x="${m.left - 8}" y="${y(t) + 4}" text-anchor="end">${cfg.fmt(t)}</text>`;
+      });
+      for (let i = 0; i < days; i += 5) {
+        const d = dates[i]; const lbl = (d.getMonth() + 1) + '/' + d.getDate();
+        s += `<text class="axis-label" x="${x(i)}" y="${H - 12}" text-anchor="middle">${lbl}</text>`;
+      }
+
+      if (cfg.type === 'line') {
+        let line = '';
+        cfg.data.forEach((v, i) => { line += (i === 0 ? 'M' : 'L') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' '; });
+        const area = line + `L${x(days - 1).toFixed(1)} ${m.top + ih} L${x(0).toFixed(1)} ${m.top + ih} Z`;
+        const c = cfg.color.replace('#', '');
+        const r = parseInt(c.substring(0,2),16), g = parseInt(c.substring(2,4),16), b = parseInt(c.substring(4,6),16);
+        s += `<defs><linearGradient id="fill-${key}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(${r},${g},${b},0.35)"/>
+          <stop offset="100%" stop-color="rgba(${r},${g},${b},0.0)"/></linearGradient></defs>`;
+        s += `<path d="${area}" fill="url(#fill-${key})" />`;
+        s += `<path d="${line}" fill="none" stroke="${cfg.color}" stroke-width="2" stroke-linejoin="round" />`;
+
+        if (cfg.markLow) {
+          const idx = cfg.data.indexOf(Math.min(...cfg.data));
+          s += `<circle cx="${x(idx)}" cy="${y(cfg.data[idx])}" r="4" fill="#e02f44" />`;
+          s += `<text class="axis-label" x="${x(idx)}" y="${y(cfg.data[idx]) + 18}" text-anchor="middle" fill="#e02f44">incident</text>`;
+        }
+        if (cfg.markHigh) {
+          const idx = cfg.data.indexOf(Math.max(...cfg.data));
+          s += `<circle cx="${x(idx)}" cy="${y(cfg.data[idx])}" r="4" fill="#e02f44" />`;
+          s += `<text class="axis-label" x="${x(idx)}" y="${y(cfg.data[idx]) - 10}" text-anchor="middle" fill="#e02f44">spike</text>`;
+        }
+        s += `<circle cx="${x(days - 1)}" cy="${y(cfg.data[days - 1])}" r="4" fill="${cfg.color}" />`;
+      } else { // bar
+        const bw = Math.max(6, iw / days - 6);
+        cfg.data.forEach((v, i) => {
+          if (v <= 0) return;
+          const bx = x(i) - bw / 2, by = y(v), bh = (m.top + ih) - by;
+          s += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${cfg.color}" />`;
+        });
+      }
+
+      document.getElementById('chart').innerHTML = s;
+      document.getElementById('ddTitle').innerHTML = cfg.title + ' <span class="sub">generated from the ' + key + ' metric</span>';
+    }
+
+    const drill = document.getElementById('drilldown');
+    const panels = Array.from(document.querySelectorAll('.panel[data-metric]'));
+    let current = null;
+
+    function openMetric(key) {
+      if (current === key) { closeAll(); return; }
+      current = key;
+      build(key);
+      drill.classList.add('is-open');
+      panels.forEach(p => p.classList.toggle('is-active', p.dataset.metric === key));
+      drill.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeAll() {
+      current = null;
+      drill.classList.remove('is-open');
+      panels.forEach(p => p.classList.remove('is-active'));
+    }
+
+    panels.forEach(p => p.addEventListener('click', () => openMetric(p.dataset.metric)));
+    document.getElementById('closeBtn').addEventListener('click', (e) => { e.stopPropagation(); closeAll(); });
+  </script>
+</body>
+</html>
