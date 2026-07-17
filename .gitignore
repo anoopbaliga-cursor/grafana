@@ -175,6 +175,7 @@ pkg/services/featuremgmt/openfeature-manifest-react.gen.json
 /scripts/build/release_publisher/release_publisher
 *.patch
 !.yarn/patches/*.patch
+!.cursor/skills/demo-101/showborder-fallback.patch
 
 # Ignoring frontend packages specifics
 /packages/grafana-ui/.yarn/.cache

@@ -8,44 +8,52 @@ description: Build a small Grafana panel option end-to-end using the frontier-pl
 Build a small, real feature the fast way: **frontier model makes the edit, cheap sub-agents
 grind in parallel, frontier model reviews, then ship it.** Move quickly — no narration.
 
-Pre-scoped so there's no hunting: add a **"Show border" toggle to the Stat panel**
-(`public/app/plugins/panel/stat/`). Files are known — go straight to editing.
+Pre-scoped so there's no hunting: add a **"Show border" toggle to the Stat panel**. The panel
+lives in `public/app/plugins/panel/stat/`; the border is drawn in shared `BigValue`
+(`packages/grafana-ui/src/components/BigValue/`) — the panel only passes `showBorder` down.
+Files are known — go straight to editing.
 
 ## Step 0 — Start clean (makes this re-runnable)
 
 Always begin from a pristine base so the edits below apply every time, no matter what a
-previous run left behind:
+previous run left behind. Do **not** use `git reset --hard` (a hook blocks it):
 
 ```bash
 cd /Users/anoopbaliga/Desktop/git/grafana
 git fetch origin
-git checkout main && git reset --hard origin/main   # clean tracked files
-git checkout -- public/app/plugins/panel/stat/ 2>/dev/null || true
-rm -f public/app/plugins/panel/stat/StatPanel.test.tsx
+git switch -C main origin/main   # clean tracked files without --hard
+git restore --source=HEAD --staged --worktree -- \
+  public/app/plugins/panel/stat/ \
+  packages/grafana-ui/src/components/BigValue/ \
+  public/locales/ 2>/dev/null || true
+git clean -fdq -- public/app/plugins/panel/stat/ packages/grafana-ui/src/components/BigValue/ 2>/dev/null || true
+rm -f public/app/plugins/panel/stat/StatPanel.test.tsx \
+  public/app/plugins/panel/stat/panelcfg.test.ts
 ```
 
-## Step 1 — Make the edit (main agent, ~4 files)
+## Step 1 — Make the edit (main agent)
 
 - `panelcfg.cue` + `panelcfg.gen.ts`: add `showBorder: bool` (default `false`).
 - `module.tsx`: `builder.addBooleanSwitch({ path: 'showBorder', name: t('stat.name-show-border', 'Show border'), ... })`.
-- `StatPanel.tsx`: when `options.showBorder`, wrap `VizRepeater` in a themed bordered div
-  and inset width/height by the border so nothing clips; else render unchanged.
+- `StatPanel.tsx`: pass `showBorder={options.showBorder}` into `BigValue`.
+- `BigValueTypes.ts`: add optional `showBorder?: boolean`.
+- `BigValueLayout.tsx`: when `showBorder`, set themed `border` / `borderRadius` in `getPanelStyles()`.
 
 ## Step 2 — Fire all 3 sub-agents in ONE parallel batch
 
 Cheap fast model (`composer-2.5-fast`), launched together in a single message; each gets
-only the stat-panel diff, not the whole chat:
+only the stat-panel + BigValue diff, not the whole chat:
 
 | Sub-agent | Job |
 | --------------- | ------------------------------------------- |
-| `test-writer`   | add + run `StatPanel.test.tsx` until green  |
+| `test-writer`   | add + run stat panel + `BigValueLayout` tests until green |
 | `code-reviewer` | correctness/security/convention pass        |
 | `docs-writer`   | one-paragraph handoff + changelog           |
 
 ## Step 3 — Review
 
-Frontier agent applies any real fix the reviewer caught and confirms stat panel tests are
-green (`yarn jest --no-watch public/app/plugins/panel/stat/`).
+Frontier agent applies any real fix the reviewer caught and confirms tests are green
+(`yarn jest --no-watch public/app/plugins/panel/stat/ packages/grafana-ui/src/components/BigValue/`).
 
 ## Step 4 — Ship it (fresh branch + PR every run)
 
@@ -55,7 +63,9 @@ uniquely named branch each run and open a PR:
 ```bash
 BRANCH="anoop-demo/show-border-$(date +%Y%m%d-%H%M%S)"
 git switch -c "$BRANCH"
-git add public/app/plugins/panel/stat/
+git add public/app/plugins/panel/stat/ \
+  packages/grafana-ui/src/components/BigValue/ \
+  public/locales/en-US/grafana.json
 git commit -m "feat(stat-panel): add show border option"
 git push -u origin "$BRANCH"
 gh pr create --title "feat(stat-panel): add show border option" \
