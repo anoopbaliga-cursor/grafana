@@ -2,7 +2,7 @@ import { css, cx } from '@emotion/css';
 import { memo, useState } from 'react';
 import tinycolor from 'tinycolor2';
 
-import { FieldType, type FieldConfig, type GrafanaTheme2 } from '@grafana/data';
+import { FieldType, rangeUtil, type FieldConfig, type GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { GraphDrawStyle, type GraphFieldConfig } from '@grafana/schema';
 
@@ -99,17 +99,18 @@ export const BigValue = memo<Props>((props) => {
     return (
       <button
         type="button"
-        className={cx(clearButtonStyles(theme), className, styles.drilldownButton)}
+        className={cx(clearButtonStyles(theme), className)}
         style={{
           ...panelStyles,
-          ...(drilldownOpen ? { height: 'auto', minHeight: height, flexDirection: 'column' as const } : {}),
+          // Stay within VizRepeater's fixed cell height; reflow content instead of growing.
+          ...(drilldownOpen ? { flexDirection: 'column' as const, overflow: 'hidden' } : {}),
         }}
         onClick={() => setDrilldownOpen((open) => !open)}
         title={tooltip}
         aria-expanded={drilldownOpen}
       >
         {valueContent}
-        {layout.renderChart()}
+        {!drilldownOpen && layout.renderChart()}
         {drilldownChart}
       </button>
     );
@@ -153,9 +154,13 @@ function DrilldownChart({ sparkline, width, height, valueColor, theme, styles }:
       }
     : undefined;
 
+  const title = sparkline?.timeRange
+    ? rangeUtil.describeTimeRange(sparkline.timeRange.raw)
+    : t('big-value.drilldown-trend', 'Trend');
+
   return (
     <div className={styles.drilldown}>
-      <div className={styles.drilldownTitle}>{t('big-value.drilldown-last-30-days', 'Last 30 days')}</div>
+      <div className={styles.drilldownTitle}>{title}</div>
       {hasChart && config && (
         <div className={styles.drilldownChart}>
           <Sparkline height={chartHeight} width={chartWidth} sparkline={sparkline} config={config} theme={theme} />
@@ -167,18 +172,15 @@ function DrilldownChart({ sparkline, width, height, valueColor, theme, styles }:
 
 const getStyles = (theme: GrafanaTheme2) => {
   return {
-    drilldownButton: css({
-      // Ensure expanded drill-down content is not clipped by layout overflow.
-      overflow: 'visible',
-    }),
     drilldown: css({
-      position: 'relative',
-      zIndex: 1,
       width: '100%',
       marginTop: theme.spacing(1),
       paddingTop: theme.spacing(1),
       borderTop: `1px solid ${theme.colors.border.weak}`,
       textAlign: 'left',
+      flexShrink: 0,
+      minHeight: 0,
+      overflow: 'hidden',
     }),
     drilldownTitle: css({
       fontSize: theme.typography.bodySmall.fontSize,

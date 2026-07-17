@@ -18,6 +18,7 @@ export interface Options extends common.SingleStatBaseOptions {
   graphMode: common.BigValueGraphMode;
   justifyMode: common.BigValueJustifyMode;
   percentChangeColorMode: common.PercentChangeColorMode;
+  showBorder: boolean;
   showPercentChange: boolean;
   textMode: common.BigValueTextMode;
   wideLayout: boolean;
@@ -29,6 +30,7 @@ export const defaultOptions: Partial<Options> = {
   graphMode: common.BigValueGraphMode.Area,
   justifyMode: common.BigValueJustifyMode.Auto,
   percentChangeColorMode: common.PercentChangeColorMode.Standard,
+  showBorder: false,
   showPercentChange: false,
   textMode: common.BigValueTextMode.Auto,
   wideLayout: true,

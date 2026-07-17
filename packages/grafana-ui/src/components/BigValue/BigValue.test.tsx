@@ -1,10 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { createTheme, FieldType, type FieldSparkline } from '@grafana/data';
+import { createTheme, dateTime, FieldType, type FieldSparkline, type TimeRange } from '@grafana/data';
 
 import { BigValue } from './BigValue';
 import { BigValueColorMode, BigValueGraphMode, type Props } from './BigValueTypes';
+
+const timeRange: TimeRange = {
+  from: dateTime('2024-01-01T00:00:00Z'),
+  to: dateTime('2024-01-01T06:00:00Z'),
+  raw: { from: 'now-6h', to: 'now' },
+};
 
 const sparkline: FieldSparkline = {
   y: {
@@ -14,6 +20,7 @@ const sparkline: FieldSparkline = {
     values: [1, 2, 3, 2, 4],
     state: { range: { min: 1, max: 4, delta: 3 } },
   },
+  timeRange,
 };
 
 const valueObject = {
@@ -63,7 +70,7 @@ describe('BigValue', () => {
   });
 
   describe('drill-down', () => {
-    it('toggles the last 30 days section when enableDrilldown is true', async () => {
+    it('toggles a section labeled from the sparkline time range when enableDrilldown is true', async () => {
       const user = userEvent.setup();
 
       render(
@@ -77,19 +84,41 @@ describe('BigValue', () => {
       );
 
       const valueButton = screen.getByRole('button', { name: '25' });
-      expect(screen.queryByText(/last 30 days/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/last 6 hours/i)).not.toBeInTheDocument();
 
       await user.click(valueButton);
-      expect(screen.getByText(/last 30 days/i)).toBeInTheDocument();
+      expect(screen.getByText(/last 6 hours/i)).toBeInTheDocument();
+      expect(valueButton).toHaveStyle({ height: '300px' });
 
       await user.click(valueButton);
-      expect(screen.queryByText(/last 30 days/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/last 6 hours/i)).not.toBeInTheDocument();
+    });
+
+    it('falls back to Trend when the sparkline has no time range', async () => {
+      const user = userEvent.setup();
+      const sparklineWithoutRange: FieldSparkline = {
+        y: sparkline.y,
+      };
+
+      render(
+        <BigValue
+          {...getProps({
+            enableDrilldown: true,
+            graphMode: BigValueGraphMode.None,
+            sparkline: sparklineWithoutRange,
+          })}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: '25' }));
+      expect(screen.getByText('Trend')).toBeInTheDocument();
     });
 
     it('does not render drill-down UI when enableDrilldown is false', () => {
       render(<BigValue {...getProps()} />);
 
-      expect(screen.queryByText(/last 30 days/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/last 6 hours/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('Trend')).not.toBeInTheDocument();
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
   });

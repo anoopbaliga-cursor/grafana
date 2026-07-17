@@ -80,6 +80,7 @@ function buildDefaultOptions(): Options {
     textMode: BigValueTextMode.Auto,
     wideLayout: true,
     showPercentChange: false,
+    showBorder: false,
     enableDrilldown: false,
     reduceOptions: {
       calcs: ['lastNotNull'],
