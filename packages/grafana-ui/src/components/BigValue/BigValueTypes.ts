@@ -74,4 +74,7 @@ export interface Props extends Themeable2 {
    * Disable the wide layout for the BigValue
    */
   disableWideLayout?: boolean;
+
+  /** When true, draws a themed border around the value */
+  showBorder?: boolean;
 }
