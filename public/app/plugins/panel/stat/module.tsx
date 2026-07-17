@@ -141,6 +141,13 @@ export const plugin = new PanelPlugin<Options>(StatPanel)
           ],
         },
         showIf: (config) => config.showPercentChange,
+      })
+      .addBooleanSwitch({
+        path: 'enableDrilldown',
+        name: t('stat.name-enable-drilldown', 'Enable drill-down'),
+        description: t('stat.description-enable-drilldown', 'Click a value to see its 30-day trend'),
+        defaultValue: defaultOptions.enableDrilldown,
+        category: mainCategory,
       });
   })
   .setNoPadding()

@@ -16,9 +16,11 @@ export const pluginVersion = "13.1.0-pre";
 
 export interface Options extends common.SingleStatBaseOptions {
   colorMode: common.BigValueColorMode;
+  enableDrilldown: boolean;
   graphMode: common.BigValueGraphMode;
   justifyMode: common.BigValueJustifyMode;
   percentChangeColorMode: common.PercentChangeColorMode;
+  showBorder: boolean;
   showPercentChange: boolean;
   textMode: common.BigValueTextMode;
   wideLayout: boolean;
@@ -26,9 +28,11 @@ export interface Options extends common.SingleStatBaseOptions {
 
 export const defaultOptions: Partial<Options> = {
   colorMode: common.BigValueColorMode.Value,
+  enableDrilldown: false,
   graphMode: common.BigValueGraphMode.Area,
   justifyMode: common.BigValueJustifyMode.Auto,
   percentChangeColorMode: common.PercentChangeColorMode.Standard,
+  showBorder: false,
   showPercentChange: false,
   textMode: common.BigValueTextMode.Auto,
   wideLayout: true,
