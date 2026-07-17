@@ -112,13 +112,6 @@ export const plugin = new PanelPlugin<Options>(StatPanel)
         category: mainCategory,
         showIf: (config) => !config.reduceOptions.values,
       })
-      .addBooleanSwitch({
-        path: 'showBorder',
-        name: t('stat.name-show-border', 'Show border'),
-        description: t('stat.description-show-border', 'Draw a border around the value'),
-        defaultValue: defaultOptions.showBorder,
-        category: mainCategory,
-      })
       .addSelect({
         path: 'percentChangeColorMode',
         name: t('stat.percent-change-color-mode', 'Percent change color mode'),
@@ -145,7 +138,7 @@ export const plugin = new PanelPlugin<Options>(StatPanel)
       .addBooleanSwitch({
         path: 'enableDrilldown',
         name: t('stat.name-enable-drilldown', 'Enable drill-down'),
-        description: t('stat.description-enable-drilldown', 'Click a value to see its 30-day trend'),
+        description: t('stat.description-enable-drilldown', 'Click the value to show a 30-day trend graph'),
         defaultValue: defaultOptions.enableDrilldown,
         category: mainCategory,
       });

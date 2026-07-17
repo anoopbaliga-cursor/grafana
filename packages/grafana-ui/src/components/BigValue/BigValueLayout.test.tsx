@@ -101,23 +101,6 @@ describe('BigValueLayout', () => {
       expect(layout).toBeInstanceOf(WideWithChartLayout);
     });
 
-    it('should not include border styles when showBorder is unset', () => {
-      const layout = buildLayout(getProps());
-      const panelStyles = layout.getPanelStyles();
-
-      expect(panelStyles.border).toBeUndefined();
-      expect(panelStyles.borderRadius).toBeUndefined();
-    });
-
-    it('should include border styles when showBorder is true', () => {
-      const theme = createTheme();
-      const layout = buildLayout(getProps({ showBorder: true, theme }));
-      const panelStyles = layout.getPanelStyles();
-
-      expect(panelStyles.border).toBe(`1px solid ${theme.colors.border.medium}`);
-      expect(panelStyles.borderRadius).toBe(theme.shape.radius.default);
-    });
-
     it.each([
       ['wide layout', {}],
       ['non-wide layout', { disableWideLayout: true }],

@@ -1,10 +1,20 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { createTheme } from '@grafana/data';
+import { createTheme, FieldType, type FieldSparkline } from '@grafana/data';
 
 import { BigValue } from './BigValue';
 import { BigValueColorMode, BigValueGraphMode, type Props } from './BigValueTypes';
+
+const sparkline: FieldSparkline = {
+  y: {
+    name: 'value',
+    type: FieldType.number,
+    config: {},
+    values: [1, 2, 3, 2, 4],
+    state: { range: { min: 1, max: 4, delta: 3 } },
+  },
+};
 
 const valueObject = {
   text: '25',
@@ -52,19 +62,34 @@ describe('BigValue', () => {
     });
   });
 
-  describe('interaction', () => {
-    it('renders the value as a button when onClick is provided', async () => {
-      const onClick = jest.fn();
-      render(<BigValue {...getProps({ onClick })} />);
+  describe('drill-down', () => {
+    it('toggles the last 30 days section when enableDrilldown is true', async () => {
+      const user = userEvent.setup();
 
-      expect(screen.getByRole('button')).toBeInTheDocument();
-      await userEvent.click(screen.getByRole('button'));
-      expect(onClick).toHaveBeenCalledTimes(1);
+      render(
+        <BigValue
+          {...getProps({
+            enableDrilldown: true,
+            graphMode: BigValueGraphMode.None,
+            sparkline,
+          })}
+        />
+      );
+
+      const valueButton = screen.getByRole('button', { name: '25' });
+      expect(screen.queryByText(/last 30 days/i)).not.toBeInTheDocument();
+
+      await user.click(valueButton);
+      expect(screen.getByText(/last 30 days/i)).toBeInTheDocument();
+
+      await user.click(valueButton);
+      expect(screen.queryByText(/last 30 days/i)).not.toBeInTheDocument();
     });
 
-    it('does not render a button when onClick is omitted', () => {
+    it('does not render drill-down UI when enableDrilldown is false', () => {
       render(<BigValue {...getProps()} />);
 
+      expect(screen.queryByText(/last 30 days/i)).not.toBeInTheDocument();
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
   });

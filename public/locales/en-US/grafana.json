@@ -14976,9 +14976,8 @@
       "label-none": "None",
       "label-value": "Value"
     },
-    "description-enable-drilldown": "Click a value to see its 30-day trend",
+    "description-enable-drilldown": "Click the value to show a 30-day trend graph",
     "description-graph-mode": "Stat panel graph / sparkline mode",
-    "description-show-border": "Draw a border around the value",
     "description-text-mode": "Control if name and value is displayed or just name",
     "graph-mode": {
       "options": {
@@ -14991,7 +14990,6 @@
     },
     "name-enable-drilldown": "Enable drill-down",
     "name-graph-mode": "Graph mode",
-    "name-show-border": "Show border",
     "name-show-percent-change": "Show percent change",
     "name-text-alignment": "Text alignment",
     "name-text-mode": "Text mode",
