@@ -32,14 +32,14 @@ export const StatPanel = memo(
     renderCounter,
   }: PanelProps<Options>) => {
     const theme = useTheme2();
-    const [drilldownValue, setDrilldownValue] = useState<FieldDisplay | undefined>(undefined);
+    const [selectedValue, setSelectedValue] = useState<FieldDisplay | null>(null);
 
     const openDrilldown = useCallback((value: FieldDisplay) => {
-      setDrilldownValue(value);
+      setSelectedValue(value);
     }, []);
 
     const closeDrilldown = useCallback(() => {
-      setDrilldownValue(undefined);
+      setSelectedValue(null);
     }, []);
 
     const getTextMode = useCallback(() => {
@@ -160,10 +160,10 @@ export const StatPanel = memo(
           autoGrid={true}
           orientation={options.orientation}
         />
-        {drilldownValue && (
+        {selectedValue && (
           <StatDrilldownDrawer
-            title={drilldownValue.display.title ?? title ?? ''}
-            value={drilldownValue}
+            title={selectedValue.display.title ?? title ?? ''}
+            value={selectedValue}
             timeZone={timeZone}
             timeRange={timeRange}
             onClose={closeDrilldown}

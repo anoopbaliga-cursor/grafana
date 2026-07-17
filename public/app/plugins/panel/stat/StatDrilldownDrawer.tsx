@@ -32,7 +32,60 @@ function seededJitter(seed: number, index: number): number {
   return x - Math.floor(x);
 }
 
-function buildSeries(metricName: string, value: FieldDisplay): DataFrame {
+function buildFromSparkline(metricName: string, value: FieldDisplay): DataFrame | undefined {
+  const sparkline = value.sparkline;
+  if (!sparkline) {
+    return undefined;
+  }
+
+  const yValues = sparkline.y.values as number[];
+  if (!yValues.length) {
+    return undefined;
+  }
+
+  const now = Date.now();
+  const cutoff = now - (DAYS - 1) * MS_PER_DAY;
+
+  let times: number[];
+  let values: number[];
+
+  if (sparkline.x) {
+    const xValues = sparkline.x.values as number[];
+    times = [];
+    values = [];
+    for (let i = 0; i < yValues.length; i++) {
+      const time = xValues[i];
+      if (time >= cutoff) {
+        times.push(time);
+        values.push(yValues[i]);
+      }
+    }
+
+    // If the sparkline window is shorter than 30 days, show all available points.
+    if (times.length === 0) {
+      times = xValues.slice();
+      values = yValues.slice();
+    }
+  } else {
+    const count = Math.min(yValues.length, DAYS);
+    times = [];
+    values = [];
+    for (let i = 0; i < count; i++) {
+      const idx = yValues.length - count + i;
+      times.push(now - (count - 1 - i) * MS_PER_DAY);
+      values.push(yValues[idx]);
+    }
+  }
+
+  return createDataFrame({
+    fields: [
+      { name: 'time', type: FieldType.time, values: times },
+      { name: metricName, type: FieldType.number, values, config: value.field },
+    ],
+  });
+}
+
+function buildSyntheticSeries(metricName: string, value: FieldDisplay): DataFrame {
   const base = value.display.numeric;
   const now = Date.now();
 
@@ -55,6 +108,10 @@ function buildSeries(metricName: string, value: FieldDisplay): DataFrame {
       { name: metricName, type: FieldType.number, values, config: value.field },
     ],
   });
+}
+
+function buildSeries(metricName: string, value: FieldDisplay): DataFrame {
+  return buildFromSparkline(metricName, value) ?? buildSyntheticSeries(metricName, value);
 }
 
 export function StatDrilldownDrawer({ title, value, timeZone, timeRange, onClose }: Props) {
