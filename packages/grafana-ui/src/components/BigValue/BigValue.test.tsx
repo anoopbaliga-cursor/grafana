@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import { createTheme } from '@grafana/data';
 
@@ -48,6 +49,23 @@ describe('BigValue', () => {
     it('should render without percent change', () => {
       render(<BigValue {...getProps()} />);
       expect(screen.queryByText('%')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('interaction', () => {
+    it('renders the value as a button when onClick is provided', async () => {
+      const onClick = jest.fn();
+      render(<BigValue {...getProps({ onClick })} />);
+
+      expect(screen.getByRole('button')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button'));
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not render a button when onClick is omitted', () => {
+      render(<BigValue {...getProps()} />);
+
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
   });
 });

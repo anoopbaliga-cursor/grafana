@@ -35,6 +35,7 @@ composableKinds: PanelCfg: {
 					showPercentChange:      bool | *false
 					showBorder:             bool | *false
 					percentChangeColorMode: common.PercentChangeColorMode & (*"standard" | _)
+					enableDrilldown:        bool | *false
 				} @cuetsy(kind="interface")
 			}
 		}]

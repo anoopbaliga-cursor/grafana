@@ -14,6 +14,7 @@ import * as common from '@grafana/schema';
 
 export interface Options extends common.SingleStatBaseOptions {
   colorMode: common.BigValueColorMode;
+  enableDrilldown: boolean;
   graphMode: common.BigValueGraphMode;
   justifyMode: common.BigValueJustifyMode;
   percentChangeColorMode: common.PercentChangeColorMode;
@@ -25,6 +26,7 @@ export interface Options extends common.SingleStatBaseOptions {
 
 export const defaultOptions: Partial<Options> = {
   colorMode: common.BigValueColorMode.Value,
+  enableDrilldown: false,
   graphMode: common.BigValueGraphMode.Area,
   justifyMode: common.BigValueJustifyMode.Auto,
   percentChangeColorMode: common.PercentChangeColorMode.Standard,
