@@ -112,6 +112,13 @@ export const plugin = new PanelPlugin<Options>(StatPanel)
         category: mainCategory,
         showIf: (config) => !config.reduceOptions.values,
       })
+      .addBooleanSwitch({
+        path: 'showBorder',
+        name: t('stat.name-show-border', 'Show border'),
+        description: t('stat.description-show-border', 'Draw a border around the value'),
+        defaultValue: defaultOptions.showBorder,
+        category: mainCategory,
+      })
       .addSelect({
         path: 'percentChangeColorMode',
         name: t('stat.percent-change-color-mode', 'Percent change color mode'),

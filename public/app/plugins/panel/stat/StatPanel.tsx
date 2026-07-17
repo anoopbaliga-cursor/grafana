@@ -71,6 +71,7 @@ export const StatPanel = memo(
             className={targetClassName}
             disableWideLayout={!options.wideLayout}
             percentChangeColorMode={options.percentChangeColorMode}
+            showBorder={options.showBorder}
           />
         );
       },
