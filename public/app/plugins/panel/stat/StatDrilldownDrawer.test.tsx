@@ -1,11 +1,7 @@
 import { type ComponentProps } from 'react';
 import type AutoSizer from 'react-virtualized-auto-sizer';
 
-import {
-  type FieldDisplay,
-  LoadingState,
-  getDefaultTimeRange,
-} from '@grafana/data';
+import { type FieldDisplay, FieldType, LoadingState } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
 import { render, screen } from 'test/test-utils';
 
@@ -59,30 +55,16 @@ describe('StatDrilldownDrawer', () => {
 
   it('shows the metric name as the drawer title', () => {
     render(
-      <StatDrilldownDrawer
-        title="Fallback title"
-        value={makeFieldDisplay()}
-        timeZone="utc"
-        timeRange={getDefaultTimeRange()}
-        onClose={jest.fn()}
-      />
+      <StatDrilldownDrawer title="Fallback title" value={makeFieldDisplay()} timeZone="utc" onClose={jest.fn()} />
     );
 
     expect(screen.getByRole('heading', { name: 'CPU Usage' })).toBeInTheDocument();
     expect(screen.getByText('Last 30 days')).toBeInTheDocument();
   });
 
-  it('renders a timeseries panel for the 30-day graph region', () => {
-    const timeRange = getDefaultTimeRange();
-
+  it('renders a timeseries panel with a time range matching the series span', () => {
     render(
-      <StatDrilldownDrawer
-        title="Fallback title"
-        value={makeFieldDisplay()}
-        timeZone="utc"
-        timeRange={timeRange}
-        onClose={jest.fn()}
-      />
+      <StatDrilldownDrawer title="Fallback title" value={makeFieldDisplay()} timeZone="utc" onClose={jest.fn()} />
     );
 
     expect(screen.getByTestId('panel-renderer')).toBeInTheDocument();
@@ -92,7 +74,6 @@ describe('StatDrilldownDrawer', () => {
         timeZone: 'utc',
         data: expect.objectContaining({
           state: LoadingState.Done,
-          timeRange,
           series: expect.arrayContaining([
             expect.objectContaining({
               fields: expect.arrayContaining([
@@ -104,18 +85,21 @@ describe('StatDrilldownDrawer', () => {
         }),
       })
     );
+
+    const props = mockPanelRendererProps.mock.calls[0][0];
+    const timeField = props.data.series[0].fields.find((f: { type: FieldType }) => f.type === FieldType.time);
+    const times = timeField.values as number[];
+    const expectedFrom = Math.min(...times);
+    const expectedTo = Math.max(...times);
+
+    expect(props.data.timeRange.from.valueOf()).toBe(expectedFrom);
+    expect(props.data.timeRange.to.valueOf()).toBe(expectedTo);
   });
 
   it('calls onClose when the drawer close control is clicked', async () => {
     const onClose = jest.fn();
     const { user } = render(
-      <StatDrilldownDrawer
-        title="Fallback title"
-        value={makeFieldDisplay()}
-        timeZone="utc"
-        timeRange={getDefaultTimeRange()}
-        onClose={onClose}
-      />
+      <StatDrilldownDrawer title="Fallback title" value={makeFieldDisplay()} timeZone="utc" onClose={onClose} />
     );
 
     await user.click(screen.getByTestId(selectors.components.Drawer.General.close));

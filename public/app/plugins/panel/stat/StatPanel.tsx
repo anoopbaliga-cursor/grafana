@@ -63,8 +63,10 @@ export const StatPanel = memo(
           sparkline.timeRange = timeRange;
         }
 
-        // Data links take precedence: only wire up drill-down when there is no menu to open.
-        const onClick = openMenu ?? (options.enableDrilldown ? () => openDrilldown(value) : undefined);
+        // Data links take precedence: only wire up drill-down when there are no data links.
+        // For a single link, DataLinksContextMenu wraps in <a> and does not provide openMenu.
+        const onClick =
+          openMenu ?? (options.enableDrilldown && !value.hasLinks ? () => openDrilldown(value) : undefined);
 
         return (
           <BigValue
@@ -165,7 +167,6 @@ export const StatPanel = memo(
             title={selectedValue.display.title ?? title ?? ''}
             value={selectedValue}
             timeZone={timeZone}
-            timeRange={timeRange}
             onClose={closeDrilldown}
           />
         )}

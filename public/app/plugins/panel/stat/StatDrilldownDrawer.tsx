@@ -4,11 +4,13 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 import {
   createDataFrame,
+  dateTime,
   type DataFrame,
   type FieldDisplay,
   FieldType,
   type GrafanaTheme2,
   LoadingState,
+  makeTimeRange,
   type TimeRange,
 } from '@grafana/data';
 import { t } from '@grafana/i18n';
@@ -19,7 +21,6 @@ interface Props {
   title: string;
   value: FieldDisplay;
   timeZone: string;
-  timeRange: TimeRange;
   onClose: () => void;
 }
 
@@ -114,12 +115,36 @@ function buildSeries(metricName: string, value: FieldDisplay): DataFrame {
   return buildFromSparkline(metricName, value) ?? buildSyntheticSeries(metricName, value);
 }
 
-export function StatDrilldownDrawer({ title, value, timeZone, timeRange, onClose }: Props) {
+function timeRangeFromFrame(frame: DataFrame): TimeRange {
+  const timeField = frame.fields.find((f) => f.type === FieldType.time);
+  const times = (timeField?.values as number[]) ?? [];
+
+  if (times.length === 0) {
+    const now = dateTime();
+    return makeTimeRange(dateTime(now.valueOf() - (DAYS - 1) * MS_PER_DAY), now);
+  }
+
+  let from = times[0];
+  let to = times[0];
+  for (let i = 1; i < times.length; i++) {
+    if (times[i] < from) {
+      from = times[i];
+    }
+    if (times[i] > to) {
+      to = times[i];
+    }
+  }
+
+  return makeTimeRange(dateTime(from), dateTime(to));
+}
+
+export function StatDrilldownDrawer({ title, value, timeZone, onClose }: Props) {
   const styles = useStyles2(getStyles);
 
   const metricName = value.display.title ?? title;
 
   const frame = useMemo(() => buildSeries(metricName, value), [metricName, value]);
+  const timeRange = useMemo(() => timeRangeFromFrame(frame), [frame]);
 
   return (
     <Drawer
