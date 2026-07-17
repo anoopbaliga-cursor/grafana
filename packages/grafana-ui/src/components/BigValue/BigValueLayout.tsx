@@ -230,11 +230,6 @@ export abstract class BigValueLayout {
         break;
     }
 
-    if (this.props.showBorder) {
-      panelStyles.border = `1px solid ${theme.colors.border.medium}`;
-      panelStyles.borderRadius = theme.shape.radius.default;
-    }
-
     if (this.justifyCenter) {
       panelStyles.alignItems = 'center';
       panelStyles.flexDirection = 'row';

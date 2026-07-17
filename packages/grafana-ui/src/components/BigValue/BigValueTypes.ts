@@ -75,6 +75,8 @@ export interface Props extends Themeable2 {
    */
   disableWideLayout?: boolean;
 
-  /** When true, draws a themed border around the value */
-  showBorder?: boolean;
+  /**
+   * When true and no external onClick is set, clicking the value toggles a 30-day drill-down chart.
+   */
+  enableDrilldown?: boolean;
 }

@@ -1,5 +1,5 @@
 import { isNumber } from 'lodash';
-import { memo, useCallback, useState, type JSX } from 'react';
+import { memo, useCallback, type JSX } from 'react';
 
 import {
   type DisplayValueAlignmentFactors,
@@ -15,7 +15,6 @@ import { BigValueTextMode, BigValueGraphMode } from '@grafana/schema';
 import { BigValue, DataLinksContextMenu, useTheme2, VizRepeater, type VizRepeaterRenderValueProps } from '@grafana/ui';
 import { type DataLinksContextMenuApi } from '@grafana/ui/internal';
 
-import { StatDrilldownDrawer } from './StatDrilldownDrawer';
 import { type Options } from './panelcfg.gen';
 
 export const StatPanel = memo(
@@ -32,15 +31,6 @@ export const StatPanel = memo(
     renderCounter,
   }: PanelProps<Options>) => {
     const theme = useTheme2();
-    const [selectedValue, setSelectedValue] = useState<FieldDisplay | null>(null);
-
-    const openDrilldown = useCallback((value: FieldDisplay) => {
-      setSelectedValue(value);
-    }, []);
-
-    const closeDrilldown = useCallback(() => {
-      setSelectedValue(null);
-    }, []);
 
     const getTextMode = useCallback(() => {
       // If we have manually set displayName or panel title switch text mode to value and name
@@ -63,9 +53,6 @@ export const StatPanel = memo(
           sparkline.timeRange = timeRange;
         }
 
-        // Data links take precedence: only wire up drill-down when there is no menu to open.
-        const onClick = openMenu ?? (options.enableDrilldown ? () => openDrilldown(value) : undefined);
-
         return (
           <BigValue
             value={value.display}
@@ -80,15 +67,15 @@ export const StatPanel = memo(
             width={width}
             height={height}
             theme={theme}
-            onClick={onClick}
+            onClick={openMenu}
             className={targetClassName}
             disableWideLayout={!options.wideLayout}
             percentChangeColorMode={options.percentChangeColorMode}
-            showBorder={options.showBorder}
+            enableDrilldown={options.enableDrilldown}
           />
         );
       },
-      [theme, timeRange, options, getTextMode, openDrilldown]
+      [theme, timeRange, options, getTextMode]
     );
 
     const renderValue = useCallback(
@@ -140,36 +127,25 @@ export const StatPanel = memo(
         replaceVariables,
         theme,
         data: data.series,
-        sparkline: options.graphMode !== BigValueGraphMode.None,
+        sparkline: options.enableDrilldown || options.graphMode !== BigValueGraphMode.None,
         percentChange: options.showPercentChange,
         timeZone,
       });
     }, [data, fieldConfig, theme, options, replaceVariables, timeZone]);
 
     return (
-      <>
-        <VizRepeater
-          getValues={getValues}
-          getAlignmentFactors={getDisplayValueAlignmentFactors}
-          renderValue={renderValue}
-          width={width}
-          height={height}
-          source={data}
-          itemSpacing={3}
-          renderCounter={renderCounter}
-          autoGrid={true}
-          orientation={options.orientation}
-        />
-        {selectedValue && (
-          <StatDrilldownDrawer
-            title={selectedValue.display.title ?? title ?? ''}
-            value={selectedValue}
-            timeZone={timeZone}
-            timeRange={timeRange}
-            onClose={closeDrilldown}
-          />
-        )}
-      </>
+      <VizRepeater
+        getValues={getValues}
+        getAlignmentFactors={getDisplayValueAlignmentFactors}
+        renderValue={renderValue}
+        width={width}
+        height={height}
+        source={data}
+        itemSpacing={3}
+        renderCounter={renderCounter}
+        autoGrid={true}
+        orientation={options.orientation}
+      />
     );
   }
 );
